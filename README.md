@@ -13,7 +13,7 @@ Run the program "pair_EI_Vclamp.hoc" and "multi_EI_Vclamp.hoc" to generate volta
 Run the program "transferfunc.hoc" followed by "plot_KES_KSS.hoc" to plot the spatial profile of the ratio between K_ES and K_SS on the dendritic tree. 
 
 Under the windows system, use the “mknrndll” command to compile the mod files, and double-click the target program for running. 
-Note: The programs are running in NEURON 5.7. Some functions may not be supported by the later versions.
+Note: The programs are tested in NEURON 7.4.
 
 Songting Li
 songting@cims.nyu.edu
