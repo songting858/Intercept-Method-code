@@ -1,0 +1,173 @@
+/* use voltage clamp to measure the effective E and I conductance transients
+
+In order to perform the intercept method, this code need to be run twice with the inhibitory reversal potential set to be -80 mV and -90 mV respectively.
+The corresponding clamp current data shall be saved to the output files named as "pair_EI_VClamp_1.dat" and "pair_EI_VClamp_2.dat", respectively.   */
+
+load_file("preload_files.hoc")
+
+cvode.active(0)
+dt=0.1
+
+t_start=200    //the arrival time of E and I synaptic inputs before which the voltage has reached its steady state under the voltage clamp
+tstop=300      //simulation end time
+
+E_loc=78        //excitatory input location, on the dendritic trunk ~311 um away from the soma
+I_loc=74        //inhibitory input location, on the dendritic trunk ~344 um away from the soma
+
+//====================declare and initialize variables==========================
+objref ampa, nmda, stim_glut
+objref gabaa, gabab, stim_gaba
+objref vol
+strdef target_path
+
+vol= new Vector()
+
+stim_gaba = new NetStim1(0.5)
+stim_gaba.number=1
+
+stim_glut = new NetStim1(0.5)
+stim_glut.number=1
+
+objref savdata, recv
+recv=new Vector()
+recv.record(&soma.v(0))
+
+//=================================functions====================================
+access soma
+distance()
+
+proc step() {	local i
+	fadvance()
+		if(ngraph!=0) {
+			for i=0, ngraph-1{
+				g[i].plot(t)
+				g[i].flush()
+				doNotify()
+			}
+		}
+}
+
+proc run() { local j
+	init()
+	if(ngraph!=0) {
+		for j=0, ngraph-1{
+				g[j].begin()
+		}
+	}
+	while(t<tstop) {
+	step()}
+}
+
+//======================initialize voltage clamp================================
+
+objref clampobj
+soma{
+  clampobj = new SEClamp(.5)
+  clampobj.dur1=tstop
+  clampobj.amp1=0
+  clampobj.rs=1e-3
+}
+
+objref irec
+irec =new Vector()
+irec.record(&clampobj.i)
+
+//===================define main function=======================================
+
+proc main() { local i, j
+
+  sprint(target_path, "%s", "pair_EI_VClamp_2.dat")  //define the output file name
+
+	savdata = new File()
+	savdata.wopen(target_path)
+
+//========================set synaptic inputs===================================
+  dend[I_loc] {
+
+	I_dist=distance(0.5)
+	print "I_dist	", I_dist
+
+	gabaa= new GABAa()
+	gabab= new GABAb()
+	gabaa.loc(0.5)
+	gabab.loc(0.5)
+	setpointer gabaa.pre, stim_gaba.y	// assign presynaptic compartment
+	setpointer gabab.pre, stim_gaba.y
+	gabaa.gmax= 5e-3 // (unit: uS)
+	gabab.gmax= 0// block gabab receptor
+  }
+
+  dend[E_loc] {
+
+	E_dist=distance(0.5)
+	print "E_dist	", E_dist
+
+	ampa = new AMPA()
+	nmda = new NMDA()
+	ampa.loc(0.5)
+	nmda.loc(0.5)
+	setpointer ampa.pre, stim_glut.y	// assign presynaptic compartment
+	setpointer nmda.pre, stim_glut.y
+
+ 	if(!Block_NMDA_Flag){
+ 	 		nmda_ampa_ratio = 0.6/(1+E_dist/300)
+ 	}else{
+ 	 		nmda_ampa_ratio = 0.1*0.6/(1+E_dist/300)
+ 	}
+
+ 	ampa.gmax	= 2e-3 //(unit: uS)
+	nmda.gmax = 0// block nmda receptor
+
+	  }
+
+//========to measure the reference E conductance without voltage clamp==========
+
+clampobj.dur1=1
+
+stim_gaba.start=tstop+500
+
+stim_glut.start=t_start
+
+run()
+vol = recv.c.sub(0)
+vol.printf(savdata,"%g \t")
+irec.printf(savdata,"%g \t")
+
+//========to measure the reference I conductance without voltage clamp==========
+
+clampobj.dur1=1
+
+stim_gaba.start=t_start
+
+stim_glut.start=tstop+500
+
+run()
+vol = recv.c.sub(0)
+vol.printf(savdata,"%g \t")
+irec.printf(savdata,"%g \t")
+
+//=========E and I are given together, and voltage clamp is used================
+
+clampobj.dur1=tstop
+
+for i = 1,5{
+  clampobj.amp1=-110+i*10    //somatic voltage is clamped at different level
+	stim_gaba.start=t_start
+	stim_glut.start=t_start
+
+	run()
+	vol = recv.c.sub(0)
+	vol.printf(savdata,"%g \t")
+	irec.printf(savdata,"%g \t")
+
+	}
+
+	savdata.close()
+	print "Done!\n"
+
+}
+
+//====================execute the main function=================================
+
+
+main()

@@ -1,0 +1,110 @@
+/* scan all the possible dendritic locations in the apical trunk and calculate their transfer functions*/
+
+/*apical trunk list: 0(41.50)-2(94.47)-14(122.82)-28(151.46)-30(179.70)-32(195.53)-40(201.79)-
+	-44(227.96)-52(254.45)-60(262.17)-66(268.27)-72(283.71)-74(311.14)-78(343.59)*/
+
+load_file("preload_files.hoc")
+
+cvode.active(0)
+secondorder=2
+dt=0.1
+
+tstop=200
+
+access soma
+	distance()
+	
+//============================define functions==================================
+proc step() {	local i
+	fadvance()
+		if(ngraph!=0) {
+			for i=0, ngraph-1{
+				g[i].plot(t)
+				g[i].flush()
+				doNotify()
+			}
+		}
+}
+
+proc run() { local j
+	init()
+	if(ngraph!=0) {
+		for j=0, ngraph-1{
+				g[j].begin()
+		}
+	}	
+	while(t<tstop) {		
+	step()}	
+}
+//=============================declare variables================================
+
+strdef target_path 
+objref savdata, recv 
+recv=new Vector()
+recv.record(&soma.v(0))
+
+objref KES
+KES= new Vector(80)
+
+objref KES_KSS
+KES_KSS= new Vector(80)
+
+//================define current clamps at the soma and dendrites===============
+objref sclampobj
+soma{
+  sclampobj = new IClamp(.5)
+  sclampobj.dur=tstop
+  sclampobj.amp=0
+  sclampobj.del=0
+}
+
+
+objref dclampobj[79]
+for i = 0,78{
+dend[i]{
+    dclampobj[i] = new IClamp(.5)
+    dclampobj[i].dur=tstop
+    dclampobj[i].amp=0
+    dclampobj[i].del=0
+  }
+            }
+//========================define main function==================================
+
+proc main() {
+    sprint(target_path, "%s", "transfunc.dat")
+    savdata = new File()
+    savdata.wopen(target_path)
+
+//===================somatic clamp=========================    
+    sclampobj.amp=0.05
+    run()   
+    KSS=(recv.x[recv.size()-1]+70)/sclampobj.amp
+    print "voltage=", recv.x[recv.size()-1]+70
+    sclampobj.amp=0
+
+//==================dendritic clamp========================    
+ for j =0,78{
+    dclampobj[j].amp=0.05
+    run()   
+    KES.x[j] = (recv.x[recv.size()-1]+70)/dclampobj[j].amp 
+    KES_KSS.x[j]= KES.x[j]/KSS
+    print "voltage=", recv.x[recv.size()-1]+70
+    dclampobj[j].amp=0
+}
+    KES_KSS.x[79]=KSS
+    
+//======storing the ratio between KES and KSS==============    
+    KES_KSS.printf(savdata,"%g \t")                                               
+    savdata.close()                                            
+    print "Done!\n"                     
+
+}
+
+
+
+main()
+        
+
+
+	
+

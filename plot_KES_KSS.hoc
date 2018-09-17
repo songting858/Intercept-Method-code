@@ -1,0 +1,61 @@
+// plot the dendritic K_ES/K_SS profile, after the run of transferfunc.hoc //
+
+/*	trunk: 28  branch: 6 	*/
+
+load_file("preload_files.hoc")
+
+objref s 
+
+
+proc main() { local i
+	
+	init()
+	ropen("transfunc.dat")
+	
+		for i = 0,78 dend[i] {
+  				insert KESKSS
+  				kk_KESKSS = fscan()
+		}
+	ropen() 
+	 
+	access soma
+	distance()
+	   		                                       
+ 
+//sl = new SectionList()
+//sl.wholetree()
+
+s = new PlotShape(stratum_radiatum)
+
+s.colormap(14,1)
+//s.colormap(0 ,    0,     0,   255)
+s.colormap(0 ,    0,    60,   255)
+s.colormap(1 ,    0,   120,   255)
+s.colormap(2 ,    0,   180,   255)
+s.colormap(3 ,    0,   255,   255)
+s.colormap(4 ,  102,   255,   153)
+s.colormap(5 ,  153,   255,   102)
+s.colormap(6 ,  204,   255,    51)
+s.colormap(7 ,  255,   215,     0)
+s.colormap(8 ,  255,   185,     0)
+s.colormap(9,  255,   155,     0)
+s.colormap(10,  255,   125,     0)
+s.colormap(11,  255,    95,     0)
+s.colormap(12,  255,    65,     0)
+s.colormap(13,  255,     0,     0)
+
+s.variable("kk_KESKSS")
+s.exec_menu("Shape Plot")
+
+//s.scale(0.06,0.09)
+//s.scale(0.05,0.6)
+s.scale(0.35,1.00)
+fast_flush_list.append(s)
+s.show(0)
+s.rotate(200,-350,0,0,0,3.4)
+s.printfile("transfunc.eps")
+//s2.exec_menu("200% Zoom In")
+//s.rotate(200,-450,0,0,0,3.4)
+}
+
+main()
