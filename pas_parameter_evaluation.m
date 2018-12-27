@@ -12,8 +12,8 @@ data=load('pas_parameter_neuron.dat');
 dt=0.1; 
 
 %estimated in pas_parameter_measure.m
-gl=0.1; 
-S=1.469e-4;
+gl=0.07; 
+S=1.66e-4;
 
 
 data=data-V_rest;

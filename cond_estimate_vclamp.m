@@ -22,8 +22,8 @@ lag=0.5; %(ms)
 
 %passive parameters are obtained from 
 %pas_parameter_measure.hoc and pas_parameter_measure.m
-GL=0.1;   %(mS/cm2) 
-S=1.469e-4;  %(cm2)
+GL=0.07;   %(mS/cm2) 
+S=1.66e-4;  %(cm2)
 
 %As an example, we change Rev_I from -10 mV to -20 mV relative to the
 %resting potential -70 mV corresponding to the set in the NEURON code
@@ -38,11 +38,11 @@ VI2=REV_I-10;
 %===========calculating the reference E and I conductances=================
 if multi_input_case==0
     tstop=100;
-    data=load('pair_EI_VClamp_1.dat');
+    data=load('pair_EI_VClamp_REV80.dat');
     data=data(:,195/dt+1:end); 
 else 
     tstop=1000; 
-    data=load('multi_EI_VClamp_1.dat');
+    data=load('multi_EI_VClamp_REV80.dat');
     data=data(:,395/dt+1:end); 
 end
 
@@ -58,8 +58,8 @@ t=linspace(-5,tstop,length(GE));
 
 %fit the slope and intercept of the I-V relation at each time with two sets of reversal potentials
 
-pre_cond_vclamp_Rev1();
-pre_cond_vclamp_Rev2();
+pre_cond_vclamp_REV80();
+pre_cond_vclamp_REV90();
 
 %estimate the conductance using the intercept method
 if VI1==VI2
@@ -109,8 +109,8 @@ hold on;
 plot(t2,GI_est_pkb,'bo','MarkerSize',6);
 
 xlim([0,Inf]);
-% ylim([-0.5,1.5]);
-ylim([-0.5,4]);
+%ylim([-0.1,1]);
+ylim([-0.6,2.6]);
 xlabel('Time (ms)','Fontsize',16);
 ylabel('Conductance (nS)','Fontsize',16);
 set(gca,'Fontsize',16);

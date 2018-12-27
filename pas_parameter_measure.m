@@ -10,7 +10,7 @@ V_rest=-70;
 
 data=load('pas_parameter_neuron.dat');
 dt=0.1;
-gl_default=0.1;  %determined by eyeball norm
+gl_default=0.07;  %determined by eyeball norm
 
 data=data-V_rest; %shift the resting potential from -70mV to 0mV
 
