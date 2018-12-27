@@ -1,0 +1,162 @@
+// voltage clamp to extract effective E and I conductances
+
+// normally the reversal potential needs to be changed once in order to apply the 
+// intercept method and the results are recorded in the output files "Vclamp_NEURON_1.dat"
+// and "Vclamp_NEURON_2.dat", respectively. 
+
+/*apical trunk list: 0(41.50)-2(94.47)-14(122.82)-28(151.46)-30(179.70)-32(195.53)-40(201.79)-
+	-44(227.96)-52(254.45)-60(262.17)-66(268.27)-72(283.71)-74(311.14)-78(343.59)*/
+
+load_file("preload_files.hoc")
+
+cvode.active(0)
+dt=0.1
+
+t_start=200    //stimulus start time
+t_dur=100      //Vclamp start from t_start to t_stop
+tstop=t_start+t_dur
+
+E_loc=78     //78
+I_loc=74     //66
+
+//====================declare and initialize variables==========================
+
+objref vol
+strdef target_path 
+objref Estim, Istim
+vol= new Vector()
+
+objref savdata, recv 
+recv=new Vector()
+recv.record(&soma.v(0))
+	
+//=================================functions====================================
+access soma
+distance()
+
+proc step() {	local i
+	fadvance()
+		if(ngraph!=0) {
+			for i=0, ngraph-1{
+				g[i].plot(t)
+				g[i].flush()
+				doNotify()
+			}
+		}
+}
+
+proc run() { local j
+	init()
+	if(ngraph!=0) {
+		for j=0, ngraph-1{
+				g[j].begin()
+		}
+	}	
+	while(t<tstop) {		
+	step()}	
+}
+
+//======================initialize voltage clamp================================
+
+objref clampobj     
+soma{
+  clampobj = new SEClamp(.5)
+  clampobj.dur1=tstop
+  clampobj.amp1=0
+  clampobj.rs=1e-3
+}
+
+objref irec
+irec =new Vector()
+irec.record(&clampobj.i)
+
+//==============================================================================
+
+proc main() { local i, j
+	
+	savdata = new File()
+	savdata.wopen(target_path)
+
+//========================set synaptic inputs===================================		
+
+dend[E_loc]{ Estim = new ExpSynn(0.5)
+Estim.onset = 0  //(ms)
+Estim.tau1 = 5   //(ms)
+Estim.tau2 = 7.8   //(ms)
+Estim.gmax = 1.5e-3  //(uS)
+Estim.e = 0       //(mV)
+
+E_dist=distance(0.5)
+print "E_dist	", E_dist
+}
+
+dend[I_loc]{ Istim = new ExpSynn(0.4)
+Istim.onset = 0    //(ms)          
+Istim.tau1 = 6     //(ms)
+Istim.tau2 = 18  //(ms)
+Istim.gmax =2.2e-3    //(uS)
+Istim.e = -90      //(mV) 
+
+I_dist=distance(0.4)
+print "I_dist	", I_dist
+}
+  	
+//=========E record without Vclamp to measure the pure E conductance============ 
+
+clampobj.dur1=1
+	      
+Estim.onset = t_start
+ 
+run()	
+vol = recv.c.sub(0)	
+vol.printf(savdata,"%g \t")
+irec.printf(savdata,"%g \t")
+Estim.onset = tstop+500
+
+//==========I record without Vclamp to measure the pure I conductance===========
+
+clampobj.dur1=1
+
+Istim.onset = t_start
+ 
+run()	
+vol = recv.c.sub(0)	
+vol.printf(savdata,"%g \t")
+irec.printf(savdata,"%g \t")
+Istim.onset = tstop+500
+
+//===========E and I are given together, and Vclamp is used===================== 
+
+clampobj.dur1=tstop
+
+for i = 1,5{
+	//clampobj.amp1=(i-2)*20-70    //somatic voltage is clamped at different level 
+  clampobj.amp1=-110+10*i
+  Estim.onset = t_start
+  Istim.onset = t_start
+  
+	run()	
+	vol = recv.c.sub(0)	
+	vol.printf(savdata,"%g \t")
+	irec.printf(savdata,"%g \t")
+
+	}
+	 		                                       
+	savdata.close()                                             
+	print "Done!\n"                     
+
+}
+
+//==============================================================================
+
+proc Normal(){
+		
+  sprint(target_path, "%s", "pair_EI_VClamp_REV90.dat")
+	main()
+		
+}
+
+Normal()
+
+	
+

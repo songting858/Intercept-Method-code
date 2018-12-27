@@ -28,9 +28,6 @@
     gh_soma	=	ghd
     gh_end	=	10*ghd
     
-    gabab_gabaa_ratio = 0.6
-    nmda_ampa_ratio = 0.6		//to be reset in the main() function
-    Block_NMDA_Flag = 0
     
 // To balance current //    
 
