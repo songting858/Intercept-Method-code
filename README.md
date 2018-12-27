@@ -1,8 +1,6 @@
 ﻿This directory includes the NEURON code (data generation) and the Matlab code (data processing) for illustrating the effectiveness of the intercept method in the determination of effective conductances using somatic voltage clamp. The detailed description of the NEURON model can be found in the file Model details.pdf.
 
-Neuron morphology: n128.hoc, apical_dendrite.hoc, apical_trunk.hoc, axon_sections.hoc, basal_dendrite.hoc, radiatum.hoc, whole_dendrites.hoc
-Active ion channels: na3.mod, nax.mod, kdrca1.mod, kaprox.mod, kadist.mod, h.mod
- Transmitter receptors: synexp.mod, 
+Neuron morphology: n128.hoc, apical_dendrite.hoc, apical_trunk.hoc, axon_sections.hoc, basal_dendrite.hoc, radiatum.hoc, whole_dendrites.hoc. Active ion channels: na3.mod, nax.mod, kdrca1.mod, kaprox.mod, kadist.mod, h.mod. Transmitter receptors: synexp.mod. 
 
 Main programs: pas_parameter_measure.hoc, pair_EI_Vclamp.hoc, multi_EI_Vclamp.hoc, transferfunc.hoc, plot_KES_KSS.hoc, plot_spots.hoc 
 
